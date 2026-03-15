@@ -12,6 +12,7 @@ set noshowmode
 augroup pink
   autocmd!
   autocmd ColorScheme,VimEnter * call pink#setup_colors()
+  autocmd WinEnter,BufEnter,BufWritePost * call pink#refresh_branch()
   autocmd WinEnter,BufEnter,BufWritePost,InsertEnter,InsertLeave * call pink#update()
   autocmd WinLeave * call pink#update_inactive()
 augroup END

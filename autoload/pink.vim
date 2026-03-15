@@ -127,13 +127,18 @@ function! pink#build_inactive() abort
   return l:s
 endfunction
 
-function! pink#branch() abort
+function! pink#refresh_branch() abort
   if exists('*FugitiveHead')
     let l:b = FugitiveHead()
-    return l:b !=# '' ? "\ue0a0 " . l:b : ''
+  else
+    silent let l:out = systemlist('git -C ' . shellescape(expand('%:p:h')) . ' rev-parse --abbrev-ref HEAD 2>/dev/null')
+    let l:b = !empty(l:out) ? l:out[0] : ''
   endif
-  silent let l:b = systemlist('git -C ' . shellescape(expand('%:p:h')) . ' rev-parse --abbrev-ref HEAD 2>/dev/null')
-  return !empty(l:b) ? "\ue0a0 " . l:b[0] : ''
+  let b:pink_branch = l:b !=# '' ? "\ue0a0 " . l:b : ''
+endfunction
+
+function! pink#branch() abort
+  return get(b:, 'pink_branch', '')
 endfunction
 
 function! pink#update() abort
