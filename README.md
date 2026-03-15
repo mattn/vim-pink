@@ -2,7 +2,7 @@
 
 A powerline-style statusline plugin with a pink/magenta color palette inspired by Starship.
 
-https://github.com/user-attachments/assets/b8232fed-de74-4033-9582-bc8587b16e83
+![](https://github.com/user-attachments/assets/b8232fed-de74-4033-9582-bc8587b16e83)
 
 ## Features
 
