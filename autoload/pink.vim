@@ -134,7 +134,8 @@ function! pink#refresh_branch() abort
     silent let l:out = systemlist('git -C ' . shellescape(expand('%:p:h')) . ' rev-parse --abbrev-ref HEAD 2>/dev/null')
     let l:b = !empty(l:out) ? l:out[0] : ''
   endif
-  let b:pink_branch = l:b !=# '' ? "\ue0a0 " . l:b : ''
+  let l:icon = has('win32') && !exists('g:pink_use_powerline') ? '' : "\ue0a0 "
+  let b:pink_branch = l:b !=# '' ? l:icon . l:b : ''
 endfunction
 
 function! pink#branch() abort
