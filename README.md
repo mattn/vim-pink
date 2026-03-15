@@ -76,6 +76,21 @@ let g:pink_sections_left = [
 | `g:pink_color_middle` | Middle fill area | `{'color': '#06969A', 'fg': '#ECF0F1'}` |
 | `g:pink_color_inactive` | Inactive window statusline | `{'color': '#9A348E', 'fg': '#ECF0F1'}` |
 
+### Cached Command Execution
+
+`pink#exec(cmd)` runs a shell command and caches the result per buffer.
+The cache is automatically refreshed on `WinEnter`, `BufEnter`, and `BufWritePost`.
+
+This is useful when adding custom sections that run external commands — without caching, the command would run on every statusline redraw.
+
+```vim
+" Show Node.js version
+let g:pink_sections_right = [
+  \ {'content': ' %{pink#exec("node --version")} ', 'color': '#33658A', 'fg': '#ECF0F1'},
+  \ {'content': ' %l:%c ', 'color': '#06969A', 'fg': '#ECF0F1'},
+  \ ]
+```
+
 ### Other Options
 
 | Variable | Description | Default |

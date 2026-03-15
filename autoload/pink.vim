@@ -196,6 +196,36 @@ function! pink#build_inactive() abort
   return l:s
 endfunction
 
+" Cached command execution ------------------------------------------------
+"
+" pink#exec(cmd) returns a cached result of the shell command {cmd}.
+" The cache is per-buffer and refreshed on WinEnter, BufEnter, and
+" BufWritePost (same events as git branch refresh).
+"
+" Usage in a section:
+"   {'content': ' %{pink#exec("node --version")} ', 'color': '#33658A'}
+
+function! pink#refresh_exec() abort
+  if !exists('b:pink_exec_cache')
+    return
+  endif
+  for l:cmd in keys(b:pink_exec_cache)
+    silent let l:out = systemlist(l:cmd . ' 2>/dev/null')
+    let b:pink_exec_cache[l:cmd] = !empty(l:out) ? l:out[0] : ''
+  endfor
+endfunction
+
+function! pink#exec(cmd) abort
+  if !exists('b:pink_exec_cache')
+    let b:pink_exec_cache = {}
+  endif
+  if !has_key(b:pink_exec_cache, a:cmd)
+    silent let l:out = systemlist(a:cmd . ' 2>/dev/null')
+    let b:pink_exec_cache[a:cmd] = !empty(l:out) ? l:out[0] : ''
+  endif
+  return b:pink_exec_cache[a:cmd]
+endfunction
+
 " Git branch --------------------------------------------------------------
 
 function! pink#refresh_branch() abort
