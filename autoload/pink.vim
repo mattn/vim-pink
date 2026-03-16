@@ -57,11 +57,15 @@ function! s:right() abort
 endfunction
 
 function! s:middle() abort
-  return get(g:, 'pink_color_middle', s:default_middle)
+  let l:m = copy(s:default_middle)
+  call extend(l:m, get(g:, 'pink_color_middle', {}))
+  return l:m
 endfunction
 
 function! s:inactive() abort
-  return get(g:, 'pink_color_inactive', s:default_inactive)
+  let l:m = copy(s:default_inactive)
+  call extend(l:m, get(g:, 'pink_color_inactive', {}))
+  return l:m
 endfunction
 
 function! s:sep() abort
@@ -176,7 +180,12 @@ function! pink#build() abort
   endfor
 
   " Middle fill
-  let l:s .= '%#PinkMid#%='
+  let l:mid = s:middle()
+  let l:s .= '%#PinkMid#'
+  if has_key(l:mid, 'content')
+    let l:s .= l:mid.content
+  endif
+  let l:s .= '%='
 
   " Right sections
   for l:i in range(len(l:right))
