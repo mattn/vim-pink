@@ -30,16 +30,16 @@ let s:default_left = [
   \    'R': {'color': '#C0392B', 'fg': '#ECF0F1'},
   \    'v': {'color': '#06969A', 'fg': '#ECF0F1'},
   \  }},
-  \ {'content': ' %f ', 'color': '#DA627D', 'fg': '#ECF0F1 ', 'gui': 'bold'},
+  \ {'content': ' %f ', 'color': '#DA627D', 'fg': '#ECF0F1', 'gui': 'bold'},
   \ {'content': ' %{pink#branch()}%{&modified ? " +" : ""} ', 'color': '#FCA17D', 'fg': '#2C3E50', 'gui': 'bold'},
   \ {'content': ' %{&filetype!=""?&filetype:""} ', 'color': '#86BBD8', 'fg': '#2C3E50'},
   \ ]
 
 " Default right sections
 let s:default_right = [
-  \ {'content': '%{&fileencoding!=""?&fileencoding:&encoding} ', 'color': '#86BBD8', 'fg': '#2C3E50'},
-  \ {'content': '%l:%c ', 'color': '#06969A', 'fg': '#ECF0F1'},
-  \ {'content': '%{strftime("♥ %H:%M")} ', 'color': '#33658A', 'fg': '#ECF0F1', 'gui': 'bold'},
+  \ {'content': ' %{&fileencoding!=""?&fileencoding:&encoding} ', 'color': '#86BBD8', 'fg': '#2C3E50'},
+  \ {'content': ' %l:%c ', 'color': '#06969A', 'fg': '#ECF0F1'},
+  \ {'content': ' %{strftime("♥ %H:%M")} ', 'color': '#33658A', 'fg': '#ECF0F1', 'gui': 'bold'},
   \ ]
 
 " Default middle (fill) and inactive colors
