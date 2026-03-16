@@ -8,7 +8,7 @@ function! pink#extension#vim_lsp#enable() abort
   endif
   let s:enabled = 1
 
-  let g:pink_lsp_message = ''
+  let s:pink_lsp_message = ''
 
   augroup pink_extension_vim_lsp
     autocmd!
@@ -22,15 +22,15 @@ function! pink#extension#vim_lsp#enable() abort
 endfunction
 
 function! pink#extension#vim_lsp#status() abort
-  return g:pink_lsp_message
+  return s:pink_lsp_message
 endfunction
 
 function! s:notification() abort
   let l:m = lsp#get_progress()
   if len(l:m) ==# 0
-    let g:pink_lsp_message = ''
+    let s:pink_lsp_message = ''
   else
-    let g:pink_lsp_message = l:m[-1]['server'] . ': ' . l:m[-1]['title']
+    let s:pink_lsp_message = l:m[-1]['server'] . ': ' . l:m[-1]['title']
   endif
   call pink#update()
 endfunction
