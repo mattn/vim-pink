@@ -12,7 +12,7 @@ function! pink#extension#vim_copilot#enable() abort
   let l:right = get(g:, 'pink_sections_right', [
     \ {'content': ' %{&fileencoding!=""?&fileencoding:&encoding} ', 'color': '#86BBD8', 'fg': '#2C3E50'},
     \ {'content': ' %l:%c ', 'color': '#06969A', 'fg': '#ECF0F1'},
-    \ {'content': ' %{strftime("' . (has('gui_running') && has('win32') ? '♡' : '♥') . ' %H:%M")} ', 'color': '#33658A', 'fg': '#ECF0F1', 'gui': 'bold'},
+    \ {'content': ' %{strftime("♡ %H:%M")} ', 'color': '#33658A', 'fg': '#ECF0F1', 'gui': 'bold'},
     \ ])
 
   let g:pink_sections_right = [
