@@ -39,7 +39,7 @@ let s:default_left = [
 let s:default_right = [
   \ {'content': ' %{&fileencoding!=""?&fileencoding:&encoding} ', 'color': '#86BBD8', 'fg': '#2C3E50'},
   \ {'content': ' %l:%c ', 'color': '#06969A', 'fg': '#ECF0F1'},
-  \ {'content': ' %{strftime("♥ %H:%M")} ', 'color': '#33658A', 'fg': '#ECF0F1', 'gui': 'bold'},
+  \ {'content': ' %{strftime("' . (has('gui_running') && has('win32') ? '♡' : '♥') . ' %H:%M")} ', 'color': '#33658A', 'fg': '#ECF0F1', 'gui': 'bold'},
   \ ]
 
 " Default middle (fill) and inactive colors
