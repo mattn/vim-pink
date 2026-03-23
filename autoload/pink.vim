@@ -167,7 +167,7 @@ function! pink#build() abort
     " Section content
     if l:is_mode
       let l:s .= ' ' . s:mode_label() . ' '
-    elseif (has('win32') && !has('gui_running')) || get(g:, 'pink_trim_sections', 0)
+    elseif  get(g:, 'pink_trim_sections', 0)
       let l:s .= trim(l:sec.content, ' ', 1)
     else
       let l:s .= l:sec.content
