@@ -24,22 +24,22 @@ let s:default_bg = '#DA627D'
 "   mode_colors : (optional, for content='mode') per-mode color overrides
 "                 { 'i': {'color': '...', 'fg': '...'}, ... }
 let s:default_left = [
-  \ {'content': 'mode', 'color': '#9A348E', 'fg': '#ECF0F1', 'gui': 'bold',
+  \ {'name': 'mode', 'content': 'mode', 'color': '#9A348E', 'fg': '#ECF0F1', 'gui': 'bold',
   \  'mode_colors': {
   \    'i': {'color': '#FCA17D', 'fg': '#2C3E50'},
   \    'R': {'color': '#C0392B', 'fg': '#ECF0F1'},
   \    'v': {'color': '#06969A', 'fg': '#ECF0F1'},
   \  }},
-  \ {'content': ' %f ', 'color': '#DA627D', 'fg': '#ECF0F1', 'gui': 'bold'},
-  \ {'content': ' %{pink#branch()}%{&modified ? " +" : ""} ', 'color': '#FCA17D', 'fg': '#2C3E50', 'gui': 'bold'},
-  \ {'content': ' %{&filetype!=""?&filetype:""} ', 'color': '#86BBD8', 'fg': '#2C3E50'},
+  \ {'name': 'file', 'content': ' %f ', 'color': '#DA627D', 'fg': '#ECF0F1', 'gui': 'bold'},
+  \ {'name': 'branch', 'content': ' %{pink#branch()}%{&modified ? " +" : ""} ', 'color': '#FCA17D', 'fg': '#2C3E50', 'gui': 'bold'},
+  \ {'name': 'filetype', 'content': ' %{&filetype!=""?&filetype:""} ', 'color': '#86BBD8', 'fg': '#2C3E50'},
   \ ]
 
 " Default right sections
 let s:default_right = [
-  \ {'content': ' %{&fileencoding!=""?&fileencoding:&encoding} ', 'color': '#86BBD8', 'fg': '#2C3E50'},
-  \ {'content': ' %l:%c ', 'color': '#06969A', 'fg': '#ECF0F1'},
-  \ {'content': ' %{strftime("♡ %H:%M")} ', 'color': '#33658A', 'fg': '#ECF0F1', 'gui': 'bold'},
+  \ {'name': 'encoding', 'content': ' %{&fileencoding!=""?&fileencoding:&encoding} ', 'color': '#86BBD8', 'fg': '#2C3E50'},
+  \ {'name': 'position', 'content': ' %l:%c ', 'color': '#06969A', 'fg': '#ECF0F1'},
+  \ {'name': 'time', 'content': ' %{strftime("♡ %H:%M")} ', 'color': '#33658A', 'fg': '#ECF0F1', 'gui': 'bold'},
   \ ]
 
 " Default middle (fill) and inactive colors
@@ -48,12 +48,54 @@ let s:default_inactive = {'color': '#9A348E', 'fg': '#ECF0F1'}
 
 " Accessor helpers --------------------------------------------------------
 
+" Apply overrides: merge by 'name', append sections without matching name
+function! s:apply_overrides(defaults, overrides) abort
+  let l:result = []
+  for l:sec in a:defaults
+    let l:out = copy(l:sec)
+    if has_key(l:sec, 'name')
+      for l:ov in a:overrides
+        if get(l:ov, 'name', '') ==# l:sec.name
+          call extend(l:out, l:ov)
+          break
+        endif
+      endfor
+    endif
+    call add(l:result, l:out)
+  endfor
+  " Append sections whose name doesn't match any default (must have 'content')
+  for l:ov in a:overrides
+    if !has_key(l:ov, 'content')
+      continue
+    endif
+    let l:found = 0
+    for l:sec in a:defaults
+      if get(l:sec, 'name', '') ==# get(l:ov, 'name', '')
+        let l:found = 1
+        break
+      endif
+    endfor
+    if !l:found
+      call add(l:result, l:ov)
+    endif
+  endfor
+  return l:result
+endfunction
+
 function! s:left() abort
-  return get(g:, 'pink_sections_left', s:default_left)
+  if exists('g:pink_sections_left')
+    return g:pink_sections_left
+  endif
+  let l:ov = get(g:, 'pink_sections_left_override', [])
+  return empty(l:ov) ? s:default_left : s:apply_overrides(s:default_left, l:ov)
 endfunction
 
 function! s:right() abort
-  return get(g:, 'pink_sections_right', s:default_right)
+  if exists('g:pink_sections_right')
+    return g:pink_sections_right
+  endif
+  let l:ov = get(g:, 'pink_sections_right_override', [])
+  return empty(l:ov) ? s:default_right : s:apply_overrides(s:default_right, l:ov)
 endfunction
 
 function! s:middle() abort
@@ -151,11 +193,18 @@ function! pink#build() abort
   let l:mk    = s:mode_key()
   let l:s     = ''
 
+  let l:has_stl_click = has('statusline_click')
+
   " Left sections
   for l:i in range(len(l:left))
     let l:sec = l:left[l:i]
     let l:is_mode = l:sec.content ==# 'mode'
     let l:use_variant = l:is_mode && has_key(get(l:sec, 'mode_colors', {}), l:mk)
+    let l:click = l:has_stl_click && has_key(l:sec, 'click') ? l:sec.click : ''
+
+    if l:click !=# ''
+      let l:s .= '%@' . l:click . '@'
+    endif
 
     " Section highlight
     if l:use_variant
@@ -179,6 +228,10 @@ function! pink#build() abort
     else
       let l:s .= '%#PinkL' . l:i . 'Sep#' . l:sep
     endif
+
+    if l:click !=# ''
+      let l:s .= '%@@'
+    endif
   endfor
 
   " Middle fill
@@ -191,9 +244,20 @@ function! pink#build() abort
 
   " Right sections
   for l:i in range(len(l:right))
+    let l:sec = l:right[l:i]
+    let l:click = l:has_stl_click && has_key(l:sec, 'click') ? l:sec.click : ''
+
+    if l:click !=# ''
+      let l:s .= '%@' . l:click . '@'
+    endif
+
     let l:s .= '%#PinkR' . l:i . 'SepL#' . l:sep
     let l:s .= '%#PinkR' . l:i . '#'
-    let l:s .= l:right[l:i].content
+    let l:s .= l:sec.content
+
+    if l:click !=# ''
+      let l:s .= '%@@'
+    endif
   endfor
 
   return l:s
