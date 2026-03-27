@@ -203,7 +203,7 @@ function! pink#build() abort
     let l:click = l:has_stl_click && has_key(l:sec, 'click') ? l:sec.click : ''
 
     if l:click !=# ''
-      let l:s .= '%@' . l:click . '@'
+      let l:s .= '%[' . l:click . ']'
     endif
 
     " Section highlight
@@ -230,7 +230,7 @@ function! pink#build() abort
     endif
 
     if l:click !=# ''
-      let l:s .= '%@@'
+      let l:s .= '%[]'
     endif
   endfor
 
@@ -248,7 +248,7 @@ function! pink#build() abort
     let l:click = l:has_stl_click && has_key(l:sec, 'click') ? l:sec.click : ''
 
     if l:click !=# ''
-      let l:s .= '%@' . l:click . '@'
+      let l:s .= '%[' . l:click . ']'
     endif
 
     let l:s .= '%#PinkR' . l:i . 'SepL#' . l:sep
@@ -256,7 +256,7 @@ function! pink#build() abort
     let l:s .= l:sec.content
 
     if l:click !=# ''
-      let l:s .= '%@@'
+      let l:s .= '%[]'
     endif
   endfor
 
