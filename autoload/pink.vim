@@ -307,8 +307,7 @@ function! pink#refresh_branch() abort
   if exists('*FugitiveHead')
     let l:b = FugitiveHead()
   else
-    silent let l:out = systemlist('git -C ' . shellescape(expand('%:p:h')) . ' rev-parse --abbrev-ref HEAD 2>/dev/null')
-    let l:b = !empty(l:out) ? l:out[0] : ''
+    let l:b = pink#git#head_branch(expand('%:p:h'))
   endif
   let l:icon = has('win32') && !exists('g:pink_use_powerline') ? '' : "\ue0a0 "
   let b:pink_branch = l:b !=# '' ? l:icon . l:b : ''
