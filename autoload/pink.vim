@@ -124,6 +124,59 @@ function! s:sec_bg(sec) abort
   return get(a:sec, 'color', get(g:, 'pink_default_bg', s:default_bg))
 endfunction
 
+" Map a single 0-255 component to nearest index in the xterm 6x6x6 cube.
+function! s:nearest_cube_index(v) abort
+  let l:cube = [0, 95, 135, 175, 215, 255]
+  let l:best = 0
+  let l:best_d = 99999
+  for l:i in range(6)
+    let l:d = abs(l:cube[l:i] - a:v)
+    if l:d < l:best_d
+      let l:best_d = l:d
+      let l:best = l:i
+    endif
+  endfor
+  return l:best
+endfunction
+
+" Convert '#RRGGBB' to nearest cterm 256-color index.
+function! s:hex_to_cterm(hex) abort
+  if type(a:hex) != type('') || a:hex !~# '^#\x\{6}$'
+    return -1
+  endif
+  let l:r = str2nr(a:hex[1:2], 16)
+  let l:g = str2nr(a:hex[3:4], 16)
+  let l:b = str2nr(a:hex[5:6], 16)
+  if l:r == l:g && l:g == l:b
+    if l:r < 8
+      return 16
+    elseif l:r > 248
+      return 231
+    endif
+    return 232 + ((l:r - 8) / 10)
+  endif
+  return 16 + 36 * s:nearest_cube_index(l:r) + 6 * s:nearest_cube_index(l:g) + s:nearest_cube_index(l:b)
+endfunction
+
+" Emit a highlight group with both gui and cterm attributes.
+function! s:hi(name, fg, bg, attrs) abort
+  let l:cfg = s:hex_to_cterm(a:fg)
+  let l:cbg = s:hex_to_cterm(a:bg)
+  let l:cmd = printf('hi %s guifg=%s guibg=%s', a:name, a:fg, a:bg)
+  if l:cfg >= 0
+    let l:cmd .= ' ctermfg=' . l:cfg
+  endif
+  if l:cbg >= 0
+    let l:cmd .= ' ctermbg=' . l:cbg
+  endif
+  if a:attrs !=# ''
+    let l:cmd .= ' gui=' . a:attrs . ' cterm=' . a:attrs
+  else
+    let l:cmd .= ' gui=NONE cterm=NONE'
+  endif
+  exe l:cmd
+endfunction
+
 function! pink#setup_colors() abort
   let l:left = s:left()
   let l:right = s:right()
@@ -134,42 +187,42 @@ function! pink#setup_colors() abort
     let l:sec = l:left[l:i]
     let l:fg  = s:sec_fg(l:sec)
     let l:bg  = s:sec_bg(l:sec)
-    let l:gui = has_key(l:sec, 'gui') ? ' gui=' . l:sec.gui : ''
+    let l:gui = get(l:sec, 'gui', '')
     let l:next_bg = l:i < len(l:left) - 1 ? s:sec_bg(l:left[l:i + 1]) : get(l:mid, 'color', s:default_bg)
 
-    exe printf('hi PinkL%d guifg=%s guibg=%s%s', l:i, l:fg, l:bg, l:gui)
-    exe printf('hi PinkL%dSep guifg=%s guibg=%s', l:i, l:bg, l:next_bg)
+    call s:hi(printf('PinkL%d', l:i), l:fg, l:bg, l:gui)
+    call s:hi(printf('PinkL%dSep', l:i), l:bg, l:next_bg, '')
 
     " Per-mode variants
     if has_key(l:sec, 'mode_colors')
       for [l:mk, l:mc] in items(l:sec.mode_colors)
         let l:mc_bg  = get(l:mc, 'color', l:bg)
         let l:mc_fg  = get(l:mc, 'fg', l:fg)
-        let l:mc_gui = has_key(l:mc, 'gui') ? ' gui=' . l:mc.gui : l:gui
-        exe printf('hi PinkL%d_%s guifg=%s guibg=%s%s', l:i, l:mk, l:mc_fg, l:mc_bg, l:mc_gui)
-        exe printf('hi PinkL%d_%sSep guifg=%s guibg=%s', l:i, l:mk, l:mc_bg, l:next_bg)
+        let l:mc_gui = get(l:mc, 'gui', l:gui)
+        call s:hi(printf('PinkL%d_%s', l:i, l:mk), l:mc_fg, l:mc_bg, l:mc_gui)
+        call s:hi(printf('PinkL%d_%sSep', l:i, l:mk), l:mc_bg, l:next_bg, '')
       endfor
     endif
   endfor
 
   " Middle fill
-  exe printf('hi PinkMid guifg=%s guibg=%s', get(l:mid, 'fg', s:default_fg), get(l:mid, 'color', s:default_bg))
+  call s:hi('PinkMid', get(l:mid, 'fg', s:default_fg), get(l:mid, 'color', s:default_bg), '')
 
   " Right sections
   for l:i in range(len(l:right))
     let l:sec = l:right[l:i]
     let l:fg  = s:sec_fg(l:sec)
     let l:bg  = s:sec_bg(l:sec)
-    let l:gui = has_key(l:sec, 'gui') ? ' gui=' . l:sec.gui : ''
+    let l:gui = get(l:sec, 'gui', '')
     let l:prev_bg = l:i == 0 ? get(l:mid, 'color', s:default_bg) : s:sec_bg(l:right[l:i - 1])
 
-    exe printf('hi PinkR%d guifg=%s guibg=%s%s', l:i, l:fg, l:bg, l:gui)
-    exe printf('hi PinkR%dSepL guifg=%s guibg=%s', l:i, l:prev_bg, l:bg)
+    call s:hi(printf('PinkR%d', l:i), l:fg, l:bg, l:gui)
+    call s:hi(printf('PinkR%dSepL', l:i), l:prev_bg, l:bg, '')
   endfor
 
   " Inactive window
   let l:inact = s:inactive()
-  exe printf('hi PinkInactive guifg=%s guibg=%s', get(l:inact, 'fg', s:default_fg), get(l:inact, 'color', s:default_bg))
+  call s:hi('PinkInactive', get(l:inact, 'fg', s:default_fg), get(l:inact, 'color', s:default_bg), '')
 endfunction
 
 " Mode helpers ------------------------------------------------------------
