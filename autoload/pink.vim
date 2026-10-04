@@ -126,22 +126,23 @@ endfunction
 
 " Map a single 0-255 component to nearest index in the xterm 6x6x6 cube.
 function! s:nearest_cube_index(v) abort
-  let l:cube = [0, 95, 135, 175, 215, 255]
-  let l:best = 0
-  let l:best_d = 99999
-  for l:i in range(6)
-    let l:d = abs(l:cube[l:i] - a:v)
-    if l:d < l:best_d
-      let l:best_d = l:d
-      let l:best = l:i
-    endif
-  endfor
-  return l:best
+  " Midpoint ties select the lower index, as in the original search.
+  return a:v < 48 ? 0 : a:v <= 115 ? 1 : a:v <= 155 ? 2
+        \ : a:v <= 195 ? 3 : a:v <= 235 ? 4 : 5
 endfunction
+
+" Reused colors within one highlight setup share their conversion result.
+let s:cterm_cache = {}
 
 " Convert '#RRGGBB' to nearest cterm 256-color index.
 function! s:hex_to_cterm(hex) abort
-  if type(a:hex) != type('') || a:hex !~# '^#\x\{6}$'
+  if type(a:hex) != type('')
+    return -1
+  endif
+  if has_key(s:cterm_cache, a:hex)
+    return s:cterm_cache[a:hex]
+  endif
+  if a:hex !~# '^#\x\{6}$'
     return -1
   endif
   let l:r = str2nr(a:hex[1:2], 16)
@@ -149,13 +150,17 @@ function! s:hex_to_cterm(hex) abort
   let l:b = str2nr(a:hex[5:6], 16)
   if l:r == l:g && l:g == l:b
     if l:r < 8
-      return 16
+      let l:color = 16
     elseif l:r > 248
-      return 231
+      let l:color = 231
+    else
+      let l:color = 232 + ((l:r - 8) / 10)
     endif
-    return 232 + ((l:r - 8) / 10)
+  else
+    let l:color = 16 + 36 * s:nearest_cube_index(l:r) + 6 * s:nearest_cube_index(l:g) + s:nearest_cube_index(l:b)
   endif
-  return 16 + 36 * s:nearest_cube_index(l:r) + 6 * s:nearest_cube_index(l:g) + s:nearest_cube_index(l:b)
+  let s:cterm_cache[a:hex] = l:color
+  return l:color
 endfunction
 
 " Emit a highlight group with both gui and cterm attributes.
@@ -178,6 +183,8 @@ function! s:hi(name, fg, bg, attrs) abort
 endfunction
 
 function! pink#setup_colors() abort
+  " Keep the cache limited to the current palette, including custom colors.
+  let s:cterm_cache = {}
   let l:left = s:left()
   let l:right = s:right()
   let l:mid = s:middle()
